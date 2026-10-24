@@ -1,6 +1,6 @@
 # Magic Wheel
 
-**Live demo:** https://khanhdoan4106.github.io/Magic-Wheel/
+🎡 **[Live demo](https://khanhdoan4106.github.io/Magic-Wheel/)**
 
 A random name picker in the spirit of Wheel of Names, with a few extras: elimination mode, multi-pick, a team splitter, history and saved lists.
 
