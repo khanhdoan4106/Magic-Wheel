@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Magic Wheel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: magic booth — the wheel is the stage on the left, a control counter on the right, the guide below; stacks on phones */
+:root{
+  --bg:#f3f1fb; --panel:#ffffff; --ink:#1d1a3a; --muted:#625e85; --line:#dcd8ee;
+  --accent:#e8a20c; --accent-ink:#1d1a3a; --brand:#3b2fb3; --danger:#c8372d; --ok:#1f8a5b;
+  --shadow:0 1px 0 rgba(29,26,58,.06),0 10px 30px -12px rgba(29,26,58,.25);
+  --f-display:"Bungee","Arial Black",Impact,sans-serif;
+  --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12102a; --panel:#1c1940; --ink:#efedff; --muted:#a6a2cc; --line:#2f2b5c;
+  --accent:#f5b52e; --accent-ink:#17142f; --brand:#8f86ff; --danger:#ff6b5e; --ok:#4cc98f;
+  --shadow:0 10px 30px -12px rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12102a; --panel:#1c1940; --ink:#efedff; --muted:#a6a2cc; --line:#2f2b5c;
+  --accent:#f5b52e; --accent-ink:#17142f; --brand:#8f86ff; --danger:#ff6b5e; --ok:#4cc98f;
+  --shadow:0 10px 30px -12px rgba(0,0,0,.6); color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+*{box-sizing:border-box}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,4vw,40px);margin:0;letter-spacing:.01em;color:var(--brand);text-wrap:balance}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:0;font-size:14px}
+.main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.wheel-box{position:relative;width:100%;max-width:min(580px,100%);aspect-ratio:1}
+#wheel{width:100%;height:100%;display:block;cursor:pointer;border-radius:50%}
+.pointer{position:absolute;right:-6px;top:50%;width:52px;height:40px;transform:translateY(-50%);transform-origin:85% 50%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3));pointer-events:none;transition:transform .08s}
+.pointer.flick{transform:translateY(-50%) rotate(-14deg)}
+.stage-bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+.counter{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center}
+
+button{font:600 14px/1 var(--f-body);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer;transition:transform .08s,background .15s,border-color .15s}
+button:hover{border-color:var(--brand)}
+button:active{transform:translateY(1px)}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.btn-spin{font-family:var(--f-display);font-weight:400;font-size:20px;letter-spacing:.04em;background:var(--accent);color:var(--accent-ink);border-color:transparent;padding:14px 34px;border-radius:999px;box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.btn-spin:hover{border-color:transparent;filter:brightness(1.05)}
+.btn-primary{background:var(--brand);color:#fff;border-color:transparent}
+.btn-ghost{background:transparent}
+.btn-danger{color:var(--danger)}
+.btn-sm{padding:7px 10px;font-size:13px;border-radius:8px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);min-width:0;overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{flex:1;border:0;border-radius:0;background:transparent;padding:13px 10px;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:hover{border-color:transparent;border-bottom-color:var(--line)}
+.tab[aria-selected="true"]:hover{border-bottom-color:var(--accent)}
+.pane{padding:16px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.between{justify-content:space-between}
+textarea{width:100%;min-height:260px;resize:vertical;font:15px/1.65 var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}
+input[type=text],input[type=number]{font:15px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+input[type=number]{width:80px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+code{font-family:var(--f-mono);font-size:12px;background:var(--bg);border:1px solid var(--line);padding:1px 5px;border-radius:5px;color:var(--ink)}
+label.field,.field{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.toggle b{display:block;font-weight:600}
+.toggle small{color:var(--muted);font-size:13px}
+.switch{appearance:none;width:44px;height:26px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch:checked{background:var(--ok)}
+.switch:checked::after{transform:translateX(18px)}
+input[type=range]{width:100%;accent-color:var(--brand)}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;max-height:340px;overflow:auto}
+.list li{display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.list li span:last-child{color:var(--muted);font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.empty{color:var(--muted);font-size:14px;padding:18px 0;text-align:center}
+details.odds{border:1px solid var(--line);border-radius:10px;padding:0 12px}
+details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14px}
+.rig{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.rig #odds{max-height:320px;overflow:auto}
+.odds-head,.odds-row{display:grid;grid-template-columns:minmax(0,1fr) 92px minmax(40px,90px) 50px;gap:10px;align-items:center}
+.odds-head{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.odds-head span:last-child{grid-column:3/5;text-align:right}
+.odds-row{padding:5px 0;font-size:14px}
+.odds-row select{font:600 13px var(--f-mono);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:6px 4px;width:100%}
+.odds-row select.set{border-color:var(--danger);color:var(--danger)}
+.odds-row.zero{opacity:.55}
+.odds-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.odds-bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.odds-bar i{display:block;height:100%;background:var(--brand)}
+.odds-row b{font-family:var(--f-mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.tag{font-family:var(--f-mono);font-size:11px;color:var(--accent-ink);background:var(--accent);border-radius:4px;padding:0 4px;margin-left:6px}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.team{border:1px solid var(--line);border-radius:10px;padding:10px;border-top:5px solid var(--c)}
+.team h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.team ol{margin:0;padding-left:20px;font-size:14px}
+.preset{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.preset span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatch{display:flex;gap:2px;padding:6px;border-radius:10px}
+.swatch i{width:14px;height:22px;border-radius:3px;display:block}
+.swatch[aria-pressed="true"]{border-color:var(--brand);border-width:2px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.seg button{border:0;background:transparent;border-radius:9px;padding:10px 8px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;line-height:1.2}
+.seg button small{font-weight:400;font-size:12px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.seg button[data-mode="cheat"][aria-pressed="true"]{color:var(--danger)}
+
+/* guide */
+.guide{padding:24px clamp(16px,3vw,32px) 28px}
+.guide h2{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,3vw,28px);margin:0 0 4px;color:var(--brand)}
+.guide > p{margin:0 0 20px;color:var(--muted);max-width:65ch}
+.g-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px 28px}
+.g-item{min-width:0}
+.g-item h3{font-size:16px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+.g-item h3 .k{font-family:var(--f-mono);font-size:12px;background:var(--accent);color:var(--accent-ink);border-radius:5px;padding:2px 6px}
+.g-item p{margin:0 0 8px;font-size:14px;max-width:60ch}
+.g-item pre{margin:0;font:13px/1.6 var(--f-mono);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;overflow-x:auto}
+.g-item ul{margin:0;padding-left:18px;font-size:14px}
+.g-feature{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding:18px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.g-feature .g-item pre{background:var(--panel)}
+
+.overlay{position:fixed;inset:0;background:rgba(10,8,30,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;backdrop-filter:blur(3px)}
+.modal{background:var(--panel);border-radius:20px;max-width:440px;width:100%;padding:26px 24px 20px;text-align:center;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.modal .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--muted);font-weight:600}
+.modal .winner{font-family:var(--f-display);font-size:clamp(28px,7vw,44px);line-height:1.1;margin:10px 0 18px;color:var(--brand);word-break:break-word}
+.modal ol{text-align:left;margin:8px 0 18px;padding-left:24px;font-size:16px;font-weight:600}
+.modal .row{justify-content:center}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:70}
+@media (prefers-reduced-motion:reduce){.modal{animation:none}.pointer{transition:none}}
+</style>
+<style>*{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Magic <span>Wheel</span></h1>
+      <p class="sub">Type names, hit spin. Weighted odds, fixed chances, elimination, multi-pick, team splitter and saved lists.</p>
+    </div>
+    <a href="#guide" class="sub" style="color:var(--brand);font-weight:600">How to use ↓</a>
+  </header>
+
+  <div class="main">
+    <section class="stage" aria-label="Wheel">
+      <div class="wheel-box">
+        <canvas id="wheel" aria-label="Click the wheel to spin"></canvas>
+        <svg class="pointer" id="pointer" viewBox="0 0 52 40" aria-hidden="true"><path d="M2 20 L44 3 Q51 20 44 37 Z" fill="var(--danger)" stroke="var(--panel)" stroke-width="3" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="stage-bar">
+        <button class="btn-spin" id="spinBtn">SPIN!</button>
+      </div>
+      <div class="counter" id="counter"></div>
+    </section>
+
+    <section class="panel">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-tab="names" id="tab-names">Entries</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="teams" id="tab-teams">Teams</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="history" id="tab-history">History</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="settings" id="tab-settings">Settings</button>
+      </div>
+
+      <div class="pane" data-pane="names">
+        <textarea id="names" spellcheck="false" aria-label="Entries, one per line"></textarea>
+        <p class="hint normal-only">One name per line. Every name has the same chance. Lines starting with <code>#</code> are ignored.</p>
+        <p class="hint cheat-only">One name per line. <code>*3</code> = 3× more likely. <code>70%</code> = fixed 70% chance, <code>100%</code> = always wins. Lines starting with <code>#</code> are ignored.</p>
+        <div class="row">
+          <button class="btn-sm" id="shuffleBtn">Shuffle</button>
+          <button class="btn-sm" id="sortBtn">Sort A–Z</button>
+          <button class="btn-sm" id="dedupeBtn">Remove duplicates</button>
+          <button class="btn-sm btn-danger" id="clearBtn">Clear all</button>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <input type="text" id="presetName" placeholder="List name, e.g. Class CS-01" style="flex:1">
+          <button class="btn-sm btn-primary" id="savePreset">Save list</button>
+        </div>
+        <div id="presets"></div>
+      </div>
+
+      <div class="pane" data-pane="teams" hidden>
+        <div class="row">
+          <label for="teamCount" style="font-weight:600">Teams</label>
+          <input type="number" id="teamCount" min="2" max="50" value="3">
+          <button class="btn-primary" id="splitBtn">Split randomly</button>
+          <button class="btn-sm btn-ghost" id="copyTeams" hidden>Copy</button>
+        </div>
+        <p class="hint">Everyone in the current list is spread evenly across the teams, at most one person apart.</p>
+        <div class="teams" id="teams"></div>
+      </div>
+
+      <div class="pane" data-pane="history" hidden>
+        <div class="row between">
+          <strong id="histCount">History</strong>
+          <div class="row">
+            <button class="btn-sm" id="copyHist">Copy</button>
+            <button class="btn-sm btn-danger" id="clearHist">Clear</button>
+          </div>
+        </div>
+        <ul class="list" id="history"></ul>
+        <div id="stats"></div>
+      </div>
+
+      <div class="pane" data-pane="settings" hidden>
+        <div class="field">Mode
+          <div class="seg" role="group" aria-label="Mode">
+            <button data-mode="normal" id="modeNormal" aria-pressed="true">Normal<small>Equal chance for everyone</small></button>
+            <button data-mode="cheat" id="modeCheat" aria-pressed="false">Cheat<small>Pick each name's chance</small></button>
+          </div>
+        </div>
+        <div class="rig cheat-only" id="rig">
+          <div class="row between">
+            <strong>Odds table</strong>
+            <button class="btn-sm btn-ghost" id="rigReset">Reset all to Auto</button>
+          </div>
+          <div class="odds-head" aria-hidden="true"><span>Name</span><span>Set chance</span><span>Real chance</span></div>
+          <div id="odds"></div>
+          <p class="hint" id="rigNote"></p>
+        </div>
+        <label class="field">Spin duration: <span id="durLabel" style="font-weight:400;color:var(--muted)">6 seconds</span>
+          <input type="range" id="duration" min="2" max="15" step="1" value="6">
+        </label>
+        <div class="toggle"><div><b>Elimination mode</b><small>Remove the winner from the wheel after each spin</small></div><input type="checkbox" class="switch" id="elim" aria-label="Elimination mode"></div>
+        <div class="toggle cheat-only"><div><b>Show real odds on wheel</b><small>Slice sizes follow the real chance, including <code>%</code> entries</small></div><input type="checkbox" class="switch" id="showOdds" aria-label="Show real odds on wheel"></div>
+        <div class="toggle"><div><b>Sound</b><small>Clicks as the pointer passes each slice</small></div><input type="checkbox" class="switch" id="sound" checked aria-label="Sound"></div>
+        <div class="toggle"><div><b>Confetti</b><small>Celebrate every winner</small></div><input type="checkbox" class="switch" id="confettiOn" checked aria-label="Confetti"></div>
+        <div class="toggle"><div><b>Winners per spin</b><small>Draw N different people with one press</small></div><input type="number" id="multi" min="1" max="50" value="1" aria-label="Winners per spin"></div>
+        <div class="field" style="margin-top:6px">Color palette
+          <div class="swatches" id="swatches"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel guide" id="guide" aria-labelledby="guideTitle">
+    <h2 id="guideTitle">How to use</h2>
+    <p>Everything is typed straight into the Entries box. Short codes at the end of a line change how likely that name is to win.</p>
+    <div class="g-grid">
+      <div class="g-item">
+        <h3>1. Add names</h3>
+        <p>Write one name per line in the Entries tab. The wheel updates as you type.</p>
+        <pre>Alex
+Minh Anh
+Jordan</pre>
+      </div>
+      <div class="g-item">
+        <h3>2. Spin</h3>
+        <p>Press <b>SPIN!</b>, click the wheel, or press <code>Space</code> / <code>Enter</code> when you are not typing. The pointer on the right picks the winner.</p>
+      </div>
+      <div class="g-item">
+        <h3>3. Handle the winner</h3>
+        <p>In the result window choose <b>Remove from wheel</b>, <b>Spin again</b> or <b>Copy</b>. Press <code>Esc</code> to close.</p>
+      </div>
+
+      <div class="g-item" style="grid-column:1/-1">
+        <h3>Two modes</h3>
+        <p><b>Normal</b> gives every name the same chance; any <code>*N</code> or <code>N%</code> codes are ignored. <b>Cheat</b> opens an odds table where you pick each name's chance (Auto, 0%, 5%, 10% … 100%), or type the codes yourself. Switch in <b>Settings → Mode</b>, or quietly with <code>Alt</code> + <code>Shift</code> + <code>C</code>. The page looks the same in both modes, so viewers can't tell which one is on.</p>
+      </div>
+
+      <div class="g-feature">
+        <div class="g-item">
+          <h3><span class="k">*N</span> Weight multiplier · Cheat mode</h3>
+          <p>Add <code>*N</code> to the end of a line to make that name N times more likely than a normal name. Its slice on the wheel grows to match, so everyone can see the advantage.</p>
+          <pre>Alex
+Jordan *3     ← 3× Alex's chance
+Sam *0.5      ← half Alex's chance</pre>
+        </div>
+        <div class="g-item">
+          <h3><span class="k">N%</span> Fixed chance · Cheat mode</h3>
+          <p>Add a percentage to lock that name's chance of winning. <code>100%</code> means it always wins. The other names share whatever is left. The wheel still looks even unless you turn on <b>Show real odds on wheel</b>.</p>
+          <pre>Alex
+Jordan 70%    ← wins 70% of spins
+Sam           ← shares the other 30%
+Taylor 100%   ← always wins</pre>
+        </div>
+        <div class="g-item">
+          <h3>Rules for odds</h3>
+          <ul>
+            <li>A line can use <code>*N</code> and <code>N%</code> together; the percentage wins.</li>
+            <li>If percentages add up to 100% or more, only those names can win, scaled to their shares.</li>
+            <li><code>0%</code> means the name never wins but stays on the wheel.</li>
+            <li>The <b>odds table</b> in Settings (Cheat mode) lets you pick a preset chance for any name from a dropdown and shows everyone's real chance. It writes the <code>N%</code> code into the list for you.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="g-item">
+        <h3>Elimination mode</h3>
+        <p>Turn it on in Settings to remove each winner automatically. Good for calling people one by one.</p>
+      </div>
+      <div class="g-item">
+        <h3>Several winners at once</h3>
+        <p>Set <b>Winners per spin</b> in Settings. One press spins the wheel N times and never picks the same person twice in that round.</p>
+      </div>
+      <div class="g-item">
+        <h3>Split into teams</h3>
+        <p>Open the Teams tab, pick how many teams, press <b>Split randomly</b>, then <b>Copy</b> to paste the result anywhere.</p>
+      </div>
+      <div class="g-item">
+        <h3>Save lists</h3>
+        <p>Name the current list and press <b>Save list</b>. Open it again later with one click. Saved lists and history stay in this browser only.</p>
+      </div>
+      <div class="g-item">
+        <h3>Tidy the list</h3>
+        <p><b>Shuffle</b>, <b>Sort A–Z</b> and <b>Remove duplicates</b> keep the list clean. Start a line with <code>#</code> to keep a name but leave it off the wheel.</p>
+      </div>
+      <div class="g-item">
+        <h3>Look and feel</h3>
+        <p>Change spin duration, sound, confetti and the color palette in Settings.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="eyebrow" id="mTitle">We have a winner</div>
+    <div id="mBody"></div>
+    <div class="row" id="mActions"></div>
+  </div>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem('fw_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('fw_'+k,JSON.stringify(v))}catch(e){}}};
+
+const PALETTES={
+  "Classic":["#3b2fb3","#e8a20c","#c8372d","#1f8a5b","#0f7fa8","#d9579b","#5b4a2f","#7c3aed"],
+  "Candy":["#ffb4a2","#ffd6a5","#fdffb6","#caffbf","#9bf6ff","#a0c4ff","#bdb2ff","#ffc6ff"],
+  "Night sea":["#0b3954","#087e8b","#bfd7ea","#ff5a5f","#c81d25","#1b4965","#5fa8d3","#62b6cb"],
+  "Mono":["#1d1a3a","#3a3566","#575092","#7b74b8","#a39dd6","#c9c5ec"]
+};
+const SAMPLE=`Alex
+Minh Anh
+Jordan
+Priya
+Hoang Long
+Sam
+Chloe
+Diego
+Yuki
+Jordan's twin *2
+# Taylor 100%   <- remove the # to make Taylor always win`;
+
+const ta=$('#names'), cv=$('#wheel'), ctx=cv.getContext('2d');
+let entries=[], rotation=0, spinning=false, palette=store.get('palette','Classic'), audio=null;
+let history=store.get('history',[]);
+let mode=store.get('mode','normal')==='cheat'?'cheat':'normal';
+ta.value=store.get('names',SAMPLE);
+$('#duration').value=store.get('duration',6);
+$('#elim').checked=store.get('elim',false);
+$('#showOdds').checked=store.get('showOdds',false);
+$('#sound').checked=store.get('sound',true);
+$('#confettiOn').checked=store.get('confetti',true);
+$('#multi').value=store.get('multi',1);
+if(!PALETTES[palette]) palette='Classic';
+
+const TAU=Math.PI*2, norm=a=>((a%TAU)+TAU)%TAU;
+
+// Parse "Name *3" and/or "Name 70%" (codes at the end of the line, any order)
+function parse(){
+  entries=[];
+  ta.value.split('\n').forEach((raw,li)=>{
+    let t=raw.trim(); if(!t||t.startsWith('#')) return;
+    let w=1, p=null, m;
+    for(let k=0;k<2;k++){
+      if((m=t.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*%$/))){p=Math.min(100,parseFloat(m[2]));t=m[1].trim();continue}
+      if((m=t.match(/^(.+?)\s*\*\s*(\d+(?:\.\d+)?)$/))){w=Math.max(0.01,Math.min(1000,parseFloat(m[2])));t=m[1].trim();continue}
+      break;
+    }
+    entries.push({name:t,w,p,line:li});
+  });
+}
+// Real probability of each entry in a list
+function probs(list){
+  if(!list.length) return [];
+  if(mode==='normal') return list.map(()=>1/list.length);
+  const fixed=list.filter(e=>e.p!=null), sumP=fixed.reduce((a,e)=>a+e.p,0);
+  const rest=list.filter(e=>e.p==null), W=rest.reduce((a,e)=>a+e.w,0);
+  let out;
+  if(fixed.length&&(sumP>=100||!rest.length)) out=list.map(e=>e.p!=null&&sumP>0?e.p/sumP:0);
+  else out=list.map(e=>e.p!=null?e.p/100:(1-sumP/100)*e.w/W);
+  if(!out.some(x=>x>0)) out=list.map(()=>1/list.length);
+  return out;
+}
+// Slice geometry: visual weight is *N, or real odds when "show real odds" is on
+function segs(list=entries){
+  const pr=probs(list), vis=mode==='normal'?pr:$('#showOdds').checked?pr:list.map(e=>e.w);
+  const W=vis.reduce((a,b)=>a+b,0)||1; let a=0;
+  return list.map((e,i)=>{const s=a;a+=vis[i]/W*TAU;return{...e,i,s,e2:a,prob:pr[i]}});
+}
+function lum(hex){const n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return (.299*r+.587*g+.114*b)/255}
+
+function size(){
+  const r=cv.getBoundingClientRect(), d=window.devicePixelRatio||1;
+  cv.width=Math.round(r.width*d); cv.height=Math.round(r.height*d);
+  ctx.setTransform(d,0,0,d,0,0); draw();
+}
+function draw(){
+  const W=cv.getBoundingClientRect().width; if(!W) return;
+  const cx=W/2, R=W/2-6, cs=getComputedStyle(document.documentElement);
+  ctx.clearRect(0,0,W,W);
+  const pal=PALETTES[palette], S=segs().filter(g=>g.e2-g.s>1e-6);
+  ctx.beginPath();ctx.arc(cx,cx,R+4,0,TAU);ctx.fillStyle=cs.getPropertyValue('--ink');ctx.fill();
+  if(!S.length){
+    ctx.beginPath();ctx.arc(cx,cx,R,0,TAU);ctx.fillStyle=cs.getPropertyValue('--panel');ctx.fill();
+    ctx.fillStyle=cs.getPropertyValue('--muted');ctx.font=`600 ${W/26}px ${cs.getPropertyValue('--f-body')}`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('Add some names',cx,cx);return;
+  }
+  const fs=Math.max(10,Math.min(W/18,W*2.6/Math.max(S.length,6)/2.2));
+  S.forEach((g,k)=>{
+    let col=pal[k%pal.length];
+    if(S.length>1&&k===S.length-1&&col===pal[0]) col=pal[(k+1)%pal.length];
+    ctx.beginPath();ctx.moveTo(cx,cx);ctx.arc(cx,cx,R,rotation+g.s,rotation+g.e2);ctx.closePath();
+    ctx.fillStyle=col;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1;ctx.stroke();
+    ctx.save();ctx.translate(cx,cx);ctx.rotate(rotation+(g.s+g.e2)/2);
+    ctx.fillStyle=lum(col)>.6?'#1d1a3a':'#ffffff';
+    const f=Math.min(fs,(g.e2-g.s)*R*.7*.75);
+    ctx.font=`700 ${f}px ${cs.getPropertyValue('--f-body')}`;ctx.textAlign='right';ctx.textBaseline='middle';
+    let t=g.name, maxW=R*.72;
+    if(ctx.measureText(t).width>maxW){while(t.length>1&&ctx.measureText(t+'…').width>maxW)t=t.slice(0,-1);t+='…'}
+    if(f>=6) ctx.fillText(t,R-14,0);
+    ctx.restore();
+  });
+  const hr=W*.11;
+  ctx.beginPath();ctx.arc(cx,cx,hr+5,0,TAU);ctx.fillStyle=cs.getPropertyValue('--ink');ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cx,hr,0,TAU);ctx.fillStyle=cs.getPropertyValue('--accent');ctx.fill();
+  ctx.fillStyle=cs.getPropertyValue('--accent-ink');ctx.font=`400 ${hr*.42}px ${cs.getPropertyValue('--f-display')}`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(spinning?'…':'SPIN',cx,cx+1);
+}
+function updateCounter(){
+  const n=entries.length;
+  $('#counter').textContent=n?`${n} ${n===1?'entry':'entries'}`:'No entries yet';
+  $('#spinBtn').disabled=n<1||spinning;
+}
+const STEPS=[0,5,10,20,25,30,40,50,60,70,75,80,90,100];
+const fmtP=p=>(p*100).toFixed(p>0&&p<.1?1:0)+'%';
+function renderOdds(){
+  const box=$('#odds'), note=$('#rigNote'); box.innerHTML='';
+  if(!entries.length){box.innerHTML='<p class="hint" style="padding:8px 0">Add names in the Entries tab first.</p>';note.textContent='';return}
+  const pr=probs(entries);
+  entries.forEach((e,i)=>{
+    const r=document.createElement('div');r.className='odds-row'+(pr[i]===0?' zero':'');
+    const n=document.createElement('span');n.textContent=e.name;n.title=e.name;
+    if(e.w!==1){const t=document.createElement('span');t.className='tag';t.textContent='×'+e.w;n.append(t)}
+    const sel=document.createElement('select');sel.id='odds-'+e.line;sel.setAttribute('aria-label','Chance for '+e.name);
+    const opts=[['','Auto'],...STEPS.map(s=>[String(s),s+'%'])];
+    if(e.p!=null&&!STEPS.includes(e.p)) opts.push([String(e.p),e.p+'%']);
+    opts.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.append(o)});
+    sel.value=e.p==null?'':String(e.p);
+    if(e.p!=null) sel.classList.add('set');
+    sel.onchange=()=>{setLineOdds(e.line,sel.value);const el=document.getElementById(sel.id);el&&el.focus()};
+    const bar=document.createElement('div');bar.className='odds-bar';const fill=document.createElement('i');fill.style.width=(pr[i]*100)+'%';bar.append(fill);
+    const v=document.createElement('b');v.textContent=fmtP(pr[i]);
+    r.append(n,sel,bar,v);box.append(r);
+  });
+  const fixed=entries.filter(e=>e.p!=null), sumP=+fixed.reduce((a,e)=>a+e.p,0).toFixed(2), autos=entries.length-fixed.length;
+  note.textContent=!fixed.length?'Everyone is on Auto, so the odds follow slice weights (equal unless you used *N).'
+    :sumP>100?`Set chances add up to ${sumP}%, so they are scaled down to fit 100%. Names on Auto cannot win.`
+    :sumP===100?(autos?'Set chances use up 100%, so names on Auto cannot win.':'Set chances add up to exactly 100%.')
+    :autos?`Names on Auto share the remaining ${+(100-sumP).toFixed(2)}%.`:`Set chances add up to ${sumP}%, so they are scaled up to fill 100%.`;
+}
+const PCT_RE=/\s+\d+(?:\.\d+)?\s*%(?=(\s*\*\s*\d+(?:\.\d+)?)?\s*$)/;
+function setLineOdds(line,val){
+  const lines=ta.value.split('\n'); let t=lines[line]; if(t==null) return;
+  t=t.replace(PCT_RE,'').replace(/\s+$/,'');
+  if(val!=='') t+=' '+val+'%';
+  lines[line]=t; ta.value=lines.join('\n'); refresh();
+}
+function refresh(){parse();store.set('names',ta.value);updateCounter();renderOdds();draw()}
+
+// ---- sound
+function tick(){
+  if(!$('#sound').checked) return;
+  try{
+    audio=audio||new (window.AudioContext||window.webkitAudioContext)();
+    const o=audio.createOscillator(),g=audio.createGain(),t=audio.currentTime;
+    o.type='square';o.frequency.value=1500+Math.random()*300;
+    g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.0001,t+.04);
+    o.connect(g).connect(audio.destination);o.start(t);o.stop(t+.05);
+  }catch(e){}
+}
+function fanfare(){
+  if(!$('#sound').checked||!audio) return;
+  [523,659,784,1047].forEach((f,i)=>{const o=audio.createOscillator(),g=audio.createGain(),t=audio.currentTime+i*.09;
+    o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.0001,t+.35);
+    o.connect(g).connect(audio.destination);o.start(t);o.stop(t+.4)});
+}
+
+// ---- spin
+function pickByProb(S){let r=Math.random();for(const g of S){r-=g.prob;if(r<=0&&g.prob>0)return g}return S.filter(g=>g.prob>0).pop()||S[0]}
+function spinOnce(pool){
+  return new Promise(res=>{
+    const S=segs(pool), win=pickByProb(S);
+    const theta=win.s+(.12+Math.random()*.76)*(win.e2-win.s);
+    const dur=+$('#duration').value*1000, turns=Math.max(3,Math.round(dur/1000*1.4));
+    const start=rotation, delta=norm(-theta-start)+turns*TAU, t0=performance.now();
+    const saved=entries; entries=pool;
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let last=-1;
+    const ease=t=>1-Math.pow(1-t,4);
+    function frame(now){
+      const t=Math.min(1,(now-t0)/(reduce?Math.min(dur,1200):dur));
+      rotation=start+delta*ease(t);
+      const p=norm(-rotation), idx=S.findIndex(g=>p>=g.s&&p<g.e2);
+      if(idx!==last){if(last!==-1){tick();const pt=$('#pointer');pt.classList.add('flick');setTimeout(()=>pt.classList.remove('flick'),60)}last=idx}
+      draw();
+      if(t<1) requestAnimationFrame(frame); else {rotation=norm(rotation);entries=saved;res(pool[win.i])}
+    }
+    requestAnimationFrame(frame);
+  });
+}
+async function spin(){
+  if(spinning) return; parse(); if(!entries.length) return;
+  try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();audio.resume&&audio.resume()}catch(e){}
+  spinning=true; updateCounter();
+  const n=Math.max(1,Math.min(+$('#multi').value||1,entries.length));
+  let pool=entries.slice(); const winners=[];
+  for(let k=0;k<n;k++){
+    const w=await spinOnce(pool); winners.push(w); pool=pool.filter(e=>e!==w);
+    if(k<n-1){toast(`Pick ${k+1}: ${w.name}`);await new Promise(r=>setTimeout(r,700))}
+  }
+  spinning=false;
+  const now=Date.now();
+  winners.forEach(w=>history.unshift({name:w.name,t:now}));
+  history=history.slice(0,300); store.set('history',history); renderHistory();
+  if($('#confettiOn').checked) confetti();
+  fanfare();
+  if($('#elim').checked) removeEntries(winners); else {draw();updateCounter()}
+  showWinners(winners);
+}
+function removeEntries(list){
+  const kill=new Set(list.map(e=>e.line));
+  ta.value=ta.value.split('\n').filter((_,i)=>!kill.has(i)).join('\n'); refresh();
+}
+
+// ---- result window
+function showWinners(ws){
+  const ov=$('#overlay'), body=$('#mBody'), act=$('#mActions');
+  $('#mTitle').textContent=ws.length>1?`${ws.length} winners`:'We have a winner';
+  body.innerHTML='';
+  if(ws.length===1){const d=document.createElement('div');d.className='winner';d.textContent=ws[0].name;body.append(d)}
+  else{const ol=document.createElement('ol');ws.forEach(w=>{const li=document.createElement('li');li.textContent=w.name;ol.append(li)});body.append(ol)}
+  act.innerHTML='';
+  const close=()=>{ov.hidden=true;$('#spinBtn').focus()};
+  if(!$('#elim').checked){
+    const rm=document.createElement('button');rm.className='btn-danger';rm.textContent='Remove from wheel';
+    rm.onclick=()=>{removeEntries(ws);close()};act.append(rm);
+  }
+  const again=document.createElement('button');again.className='btn-primary';again.textContent='Spin again';again.onclick=()=>{close();spin()};
+  const ok=document.createElement('button');ok.textContent='Close';ok.onclick=close;
+  const cp=document.createElement('button');cp.className='btn-ghost';cp.textContent='Copy';cp.onclick=()=>copy(ws.map(w=>w.name).join('\n'));
+  act.append(again,ok,cp);
+  ov.hidden=false; again.focus();
+  ov.onclick=e=>{if(e.target===ov)close()};
+}
+document.addEventListener('keydown',e=>{
+  if(e.altKey&&e.shiftKey&&e.code==='KeyC'){e.preventDefault();setMode(mode==='cheat'?'normal':'cheat');return}
+  if(e.key==='Escape'&&!$('#overlay').hidden){$('#overlay').hidden=true;return}
+  const tag=document.activeElement&&document.activeElement.tagName;
+  if((e.code==='Space'||e.key==='Enter')&&!['TEXTAREA','INPUT','BUTTON','SUMMARY','A'].includes(tag)&&$('#overlay').hidden){e.preventDefault();spin()}
+});
+
+// ---- confetti
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c=$('#confetti'),x=c.getContext('2d'),d=window.devicePixelRatio||1;
+  c.width=innerWidth*d;c.height=innerHeight*d;x.setTransform(d,0,0,d,0,0);
+  const pal=PALETTES['Classic'];
+  const ps=Array.from({length:160},()=>({x:innerWidth/2,y:innerHeight*.45,vx:(Math.random()-.5)*16,vy:-Math.random()*15-4,r:Math.random()*TAU,vr:(Math.random()-.5)*.4,s:6+Math.random()*6,c:pal[Math.random()*pal.length|0]}));
+  let f=0;(function loop(){
+    x.clearRect(0,0,innerWidth,innerHeight);
+    ps.forEach(p=>{p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+    if(++f<170) requestAnimationFrame(loop); else x.clearRect(0,0,innerWidth,innerHeight);
+  })();
+}
+
+// ---- utilities
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.append(t);setTimeout(()=>t.remove(),1600)}
+function copy(text){
+  const done=()=>toast('Copied');
+  try{navigator.clipboard.writeText(text).then(done,fallback)}catch(e){fallback()}
+  function fallback(){const a=document.createElement('textarea');a.value=text;document.body.append(a);a.select();try{document.execCommand('copy');done()}catch(e){toast('Copy failed. Select the text and copy it manually.')}a.remove()}
+}
+function setLines(arr){ta.value=arr.join('\n');refresh()}
+const rawLines=()=>ta.value.split('\n').map(s=>s.trim()).filter(Boolean);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+$('#shuffleBtn').onclick=()=>setLines(shuffle(rawLines()));
+$('#sortBtn').onclick=()=>setLines(rawLines().sort((a,b)=>a.localeCompare(b)));
+$('#dedupeBtn').onclick=()=>{const s=new Set;setLines(rawLines().filter(l=>{const k=l.toLowerCase();if(s.has(k))return false;s.add(k);return true}))};
+function armed(btn,label,confirmLabel,action){
+  let on=false;
+  btn.onclick=()=>{
+    if(!on){on=true;btn.textContent=confirmLabel;setTimeout(()=>{on=false;btn.textContent=label},2500);return}
+    on=false;btn.textContent=label;action();
+  };
+}
+armed($('#clearBtn'),'Clear all','Click again to clear',()=>setLines([]));
+ta.addEventListener('input',refresh);
+$('#spinBtn').onclick=spin;
+cv.onclick=e=>{const r=cv.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2;if(Math.hypot(dx,dy)<r.width/2)spin()};
+
+// ---- tabs
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('.pane').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab);
+});
+
+// ---- saved lists
+function renderPresets(){
+  const ps=store.get('presets',{}), box=$('#presets'); box.innerHTML='';
+  const keys=Object.keys(ps);
+  if(!keys.length){box.innerHTML='<p class="hint">Saved lists appear here. They are stored in this browser only.</p>';return}
+  keys.forEach(k=>{
+    const row=document.createElement('div');row.className='preset';
+    const sp=document.createElement('span');const c=ps[k].split('\n').filter(Boolean).length;sp.textContent=`${k} · ${c} ${c===1?'name':'names'}`;
+    const g=document.createElement('div');g.className='row';
+    const l=document.createElement('button');l.className='btn-sm';l.textContent='Open';l.onclick=()=>{ta.value=ps[k];refresh();toast(`Opened "${k}"`)};
+    const d=document.createElement('button');d.className='btn-sm btn-ghost btn-danger';d.textContent='Delete';d.onclick=()=>{delete ps[k];store.set('presets',ps);renderPresets()};
+    g.append(l,d);row.append(sp,g);box.append(row);
+  });
+}
+$('#savePreset').onclick=()=>{
+  const n=$('#presetName').value.trim()||('List '+new Date().toLocaleDateString('en-GB'));
+  const ps=store.get('presets',{});ps[n]=ta.value;store.set('presets',ps);$('#presetName').value='';renderPresets();toast(`Saved "${n}"`);
+};
+
+// ---- teams
+let lastTeams=null;
+$('#splitBtn').onclick=()=>{
+  parse();const k=Math.max(2,Math.min(50,+$('#teamCount').value||2));
+  const names=shuffle(entries.map(e=>e.name)), teams=Array.from({length:k},()=>[]);
+  names.forEach((n,i)=>teams[i%k].push(n));
+  lastTeams=teams;const box=$('#teams');box.innerHTML='';
+  const pal=PALETTES[palette];
+  if(!names.length){box.innerHTML='<p class="empty">The list is empty.</p>';return}
+  teams.forEach((t,i)=>{
+    const d=document.createElement('div');d.className='team';d.style.setProperty('--c',pal[i%pal.length]);
+    const h=document.createElement('h4');h.textContent=`Team ${i+1} · ${t.length}`;d.append(h);
+    const ol=document.createElement('ol');t.forEach(n=>{const li=document.createElement('li');li.textContent=n;ol.append(li)});d.append(ol);box.append(d);
+  });
+  $('#copyTeams').hidden=false;
+};
+$('#copyTeams').onclick=()=>lastTeams&&copy(lastTeams.map((t,i)=>`Team ${i+1}: ${t.join(', ')}`).join('\n'));
+
+// ---- history
+function renderHistory(){
+  const ul=$('#history');ul.innerHTML='';
+  $('#histCount').textContent=`History · ${history.length} ${history.length===1?'spin':'spins'}`;
+  if(!history.length){ul.innerHTML='<li class="empty" style="justify-content:center;border:0">No spins yet.</li>';$('#stats').innerHTML='';return}
+  history.slice(0,100).forEach(h=>{const li=document.createElement('li');const a=document.createElement('span');a.textContent=h.name;const b=document.createElement('span');
+    const d=new Date(h.t);b.textContent=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' · '+d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});li.append(a,b);ul.append(li)});
+  const cnt={};history.forEach(h=>cnt[h.name]=(cnt[h.name]||0)+1);
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  $('#stats').innerHTML='';const p=document.createElement('p');p.className='hint';
+  p.textContent='Most wins: '+top.map(([n,c])=>`${n} (${c})`).join(', ');$('#stats').append(p);
+}
+$('#copyHist').onclick=()=>copy(history.map(h=>h.name).join('\n'));
+armed($('#clearHist'),'Clear','Sure?',()=>{history=[];store.set('history',history);renderHistory()});
+
+// ---- settings
+function durLabel(){$('#durLabel').textContent=$('#duration').value+' seconds'}
+$('#duration').oninput=()=>{durLabel();store.set('duration',+$('#duration').value)};
+['elim','sound','confettiOn','showOdds'].forEach(id=>$('#'+id).onchange=e=>{store.set(id==='confettiOn'?'confetti':id,e.target.checked);if(id==='showOdds')draw()});
+$('#multi').onchange=e=>store.set('multi',Math.max(1,+e.target.value||1));
+function renderSwatches(){
+  const box=$('#swatches');box.innerHTML='';
+  Object.entries(PALETTES).forEach(([k,cols])=>{
+    const b=document.createElement('button');b.className='swatch';b.setAttribute('aria-pressed',k===palette);b.title=k;b.setAttribute('aria-label',k+' palette');
+    cols.slice(0,6).forEach(c=>{const i=document.createElement('i');i.style.background=c;b.append(i)});
+    b.onclick=()=>{palette=k;store.set('palette',k);renderSwatches();draw()};box.append(b);
+  });
+}
+
+// ---- modes
+function setMode(m){
+  mode=m; store.set('mode',m);
+  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
+  document.querySelectorAll('.cheat-only').forEach(el=>el.hidden=m!=='cheat');
+  document.querySelectorAll('.normal-only').forEach(el=>el.hidden=m==='cheat');
+  renderOdds(); draw();
+}
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+$('#rigReset').onclick=()=>{
+  ta.value=ta.value.split('\n').map(l=>l.trim().startsWith('#')?l:l.replace(PCT_RE,'').replace(/\s+$/,'')).join('\n');refresh();
+};
+
+durLabel();renderSwatches();renderPresets();renderHistory();refresh();setMode(mode);
+new ResizeObserver(size).observe(cv);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+document.fonts&&document.fonts.ready.then(draw);
+})();
+</script>
+</body>
+</html>
