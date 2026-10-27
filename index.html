@@ -114,6 +114,7 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
 .swatch[aria-pressed="true"]{border-color:var(--ink);border-width:2px}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
 .seg button{border:0;background:transparent;border-radius:9px;padding:10px 8px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;line-height:1.2}
+.seg-3{grid-template-columns:1fr 1fr 1fr}
 .seg button small{font-weight:400;font-size:12px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .seg button[data-mode="cheat"][aria-pressed="true"]{color:var(--danger)}
@@ -144,6 +145,7 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
 @media (prefers-reduced-motion:reduce){.modal{animation:none}.pointer{transition:none}}
 </style>
 <style>*{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<script>try{var t=JSON.parse(localStorage.getItem('fw_theme'));if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
 
@@ -218,7 +220,7 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
 
       <div class="pane" data-pane="settings" hidden>
         <div class="field">Mode
-          <div class="seg" role="group" aria-label="Mode">
+          <div class="seg" id="modeSeg" role="group" aria-label="Mode">
             <button data-mode="normal" id="modeNormal" aria-pressed="true">Normal<small>Equal chance for everyone</small></button>
             <button data-mode="cheat" id="modeCheat" aria-pressed="false">Cheat<small>Pick each name's chance</small></button>
           </div>
@@ -240,6 +242,13 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
         <div class="toggle"><div><b>Sound</b><small>Clicks as the pointer passes each slice</small></div><input type="checkbox" class="switch" id="sound" checked aria-label="Sound"></div>
         <div class="toggle"><div><b>Confetti</b><small>Celebrate every winner</small></div><input type="checkbox" class="switch" id="confettiOn" checked aria-label="Confetti"></div>
         <div class="toggle"><div><b>Winners per spin</b><small>Draw N different people with one press</small></div><input type="number" id="multi" min="1" max="50" value="1" aria-label="Winners per spin"></div>
+        <div class="field" style="margin-top:6px">Appearance
+          <div class="seg seg-3" id="themeSeg" role="group" aria-label="Appearance">
+            <button data-theme="auto" aria-pressed="true">Auto<small>Follow the device</small></button>
+            <button data-theme="light" aria-pressed="false">Light<small>Lavender page</small></button>
+            <button data-theme="dark" aria-pressed="false">Dark<small>Deep indigo</small></button>
+          </div>
+        </div>
         <div class="field" style="margin-top:6px">Color palette
           <div class="swatches" id="swatches"></div>
         </div>
@@ -321,7 +330,7 @@ Taylor 100%   ← always wins</pre>
       </div>
       <div class="g-item">
         <h3>Look and feel</h3>
-        <p>Change spin duration, sound, confetti and the color palette in Settings.</p>
+        <p>Change spin duration, sound, confetti, light or dark appearance and the color palette in Settings.</p>
       </div>
     </div>
   </section>
@@ -702,12 +711,21 @@ function renderSwatches(){
 // ---- modes
 function setMode(m){
   mode=m; store.set('mode',m);
-  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
   document.querySelectorAll('.cheat-only').forEach(el=>el.hidden=m!=='cheat');
   document.querySelectorAll('.normal-only').forEach(el=>el.hidden=m==='cheat');
   renderOdds(); draw();
 }
-document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+
+// ---- light / dark
+function setTheme(t){
+  if(t==='light'||t==='dark') document.documentElement.dataset.theme=t; else delete document.documentElement.dataset.theme;
+  store.set('theme',t);
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.theme===t));
+}
+document.querySelectorAll('#themeSeg button').forEach(b=>b.onclick=()=>setTheme(b.dataset.theme));
+setTheme(store.get('theme','auto'));
 $('#rigReset').onclick=()=>{
   ta.value=ta.value.split('\n').map(l=>l.trim().startsWith('#')?l:l.replace(PCT_RE,'').replace(/\s+$/,'')).join('\n');refresh();
 };
