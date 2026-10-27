@@ -15,14 +15,14 @@ It is a single `index.html` file with no build step and no dependencies apart fr
 
 | Feature | How |
 |---|---|
-| Spin | Press **SPIN!**, click the wheel, or press `Space` / `Enter` |
+| Spin | Press **Spin**, click the wheel, or press `Space` / `Enter` |
 | Ignore a line | Start it with `#` |
 | Elimination mode | Settings → remove each winner automatically |
 | Several winners | Settings → **Winners per spin** picks N different people in one go |
 | Teams | Teams tab → split the list evenly into N random teams |
 | History | Every result with time, plus who won most |
 | Saved lists | Name and save the current list, reopen with one click |
-| Look and feel | Spin duration, sound, confetti, 4 color palettes, light/dark theme |
+| Look and feel | Spin duration, sound, confetti, 5 color palettes (Fairground by default), light/dark theme |
 
 There is also an advanced mode with custom odds per name. See the guide at the bottom of the page.
 
