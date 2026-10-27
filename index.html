@@ -7,21 +7,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
 <style>
-/* Fairground prize wheel: the wheel (black rim, white pegs, flapper on top) is the one loud thing.
-   Everything around it is flat and quiet: cool grey page, ink, one sign-painter red. */
+/* Fairground prize wheel: the wheel (indigo rim, pale pegs, flapper on top) is the one loud thing.
+   Everything around it is flat and quiet: lavender page, indigo ink, marigold for the spin button. */
 :root{
-  --bg:#eceef1; --panel:#ffffff; --ink:#17181c; --muted:#5c616b; --line:#d9dce1;
-  --accent:#f5b700; --accent-ink:#17181c; --brand:#d7263d; --danger:#b3261e; --ok:#2e933c;
+  --bg:#f3f1fb; --panel:#ffffff; --ink:#1d1a3a; --muted:#625e85; --line:#dcd8ee;
+  --accent:#e8a20c; --accent-ink:#1d1a3a; --brand:#3b2fb3; --danger:#c8372d; --ok:#1f8a5b;
+  --rim:#251c80; --peg:#f3f1fb;
   --f-display:"Bungee","Arial Black",Impact,sans-serif;
   --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"Be Vietnam Pro",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#131418; --panel:#1c1e23; --ink:#eef0f3; --muted:#9da3ad; --line:#2e3138;
-  --accent:#ffc93c; --accent-ink:#17181c; --brand:#ff5a6a; --danger:#ff7066; --ok:#4cc96a; color-scheme:dark}}
+  --bg:#12102a; --panel:#1c1940; --ink:#efedff; --muted:#a6a2cc; --line:#2f2b5c;
+  --accent:#f5b52e; --accent-ink:#17142f; --brand:#8f86ff; --danger:#ff6b5e; --ok:#4cc98f;
+  --rim:#2c2470; --peg:#efedff; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#131418; --panel:#1c1e23; --ink:#eef0f3; --muted:#9da3ad; --line:#2e3138;
-  --accent:#ffc93c; --accent-ink:#17181c; --brand:#ff5a6a; --danger:#ff7066; --ok:#4cc96a; color-scheme:dark}
+  --bg:#12102a; --panel:#1c1940; --ink:#efedff; --muted:#a6a2cc; --line:#2f2b5c;
+  --accent:#f5b52e; --accent-ink:#17142f; --brand:#8f86ff; --danger:#ff6b5e; --ok:#4cc98f;
+  --rim:#2c2470; --peg:#efedff; color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
 *{box-sizing:border-box}
@@ -47,7 +50,7 @@ button:hover{border-color:var(--ink)}
 button:active{transform:translateY(1px)}
 button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 button:disabled{opacity:.5;cursor:not-allowed}
-.btn-spin{font-family:var(--f-display);font-weight:400;font-size:22px;letter-spacing:.04em;background:var(--brand);color:#fff;border-color:transparent;padding:14px 44px;border-radius:999px;box-shadow:0 4px 0 color-mix(in srgb,var(--brand) 55%,#000)}
+.btn-spin{font-family:var(--f-display);font-weight:400;font-size:22px;letter-spacing:.04em;background:var(--accent);color:var(--accent-ink);border-color:transparent;padding:14px 44px;border-radius:999px;box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)}
 .btn-spin:hover{border-color:transparent;filter:brightness(1.05)}
 .btn-primary{background:var(--ink);color:var(--panel);border-color:transparent}
 .btn-primary:hover{border-color:transparent;opacity:.9}
@@ -111,6 +114,7 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
 .swatch[aria-pressed="true"]{border-color:var(--ink);border-width:2px}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
 .seg button{border:0;background:transparent;border-radius:9px;padding:10px 8px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;line-height:1.2}
+.seg-3{grid-template-columns:1fr 1fr 1fr}
 .seg button small{font-weight:400;font-size:12px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .seg button[data-mode="cheat"][aria-pressed="true"]{color:var(--danger)}
@@ -129,7 +133,7 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
 .g-feature{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding:18px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
 .g-feature .g-item pre{background:var(--panel)}
 
-.overlay{position:fixed;inset:0;background:rgba(15,16,20,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;backdrop-filter:blur(3px)}
+.overlay{position:fixed;inset:0;background:rgba(10,8,30,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;backdrop-filter:blur(3px)}
 .modal{background:var(--panel);border-radius:12px;border-top:8px solid var(--brand);max-width:460px;width:100%;padding:24px 24px 20px;text-align:center;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
 @keyframes pop{from{transform:scale(.8);opacity:0}}
 .modal .eyebrow{font-size:15px;color:var(--muted);font-weight:500}
@@ -141,6 +145,7 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
 @media (prefers-reduced-motion:reduce){.modal{animation:none}.pointer{transition:none}}
 </style>
 <style>*{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<script>try{var t=JSON.parse(localStorage.getItem('fw_theme'));if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
 
@@ -215,7 +220,7 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
 
       <div class="pane" data-pane="settings" hidden>
         <div class="field">Mode
-          <div class="seg" role="group" aria-label="Mode">
+          <div class="seg" id="modeSeg" role="group" aria-label="Mode">
             <button data-mode="normal" id="modeNormal" aria-pressed="true">Normal<small>Equal chance for everyone</small></button>
             <button data-mode="cheat" id="modeCheat" aria-pressed="false">Cheat<small>Pick each name's chance</small></button>
           </div>
@@ -237,6 +242,13 @@ details.odds summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14p
         <div class="toggle"><div><b>Sound</b><small>Clicks as the pointer passes each slice</small></div><input type="checkbox" class="switch" id="sound" checked aria-label="Sound"></div>
         <div class="toggle"><div><b>Confetti</b><small>Celebrate every winner</small></div><input type="checkbox" class="switch" id="confettiOn" checked aria-label="Confetti"></div>
         <div class="toggle"><div><b>Winners per spin</b><small>Draw N different people with one press</small></div><input type="number" id="multi" min="1" max="50" value="1" aria-label="Winners per spin"></div>
+        <div class="field" style="margin-top:6px">Appearance
+          <div class="seg seg-3" id="themeSeg" role="group" aria-label="Appearance">
+            <button data-theme="auto" aria-pressed="true">Auto<small>Follow the device</small></button>
+            <button data-theme="light" aria-pressed="false">Light<small>Lavender page</small></button>
+            <button data-theme="dark" aria-pressed="false">Dark<small>Deep indigo</small></button>
+          </div>
+        </div>
         <div class="field" style="margin-top:6px">Color palette
           <div class="swatches" id="swatches"></div>
         </div>
@@ -318,7 +330,7 @@ Taylor 100%   ← always wins</pre>
       </div>
       <div class="g-item">
         <h3>Look and feel</h3>
-        <p>Change spin duration, sound, confetti and the color palette in Settings.</p>
+        <p>Change spin duration, sound, confetti, light or dark appearance and the color palette in Settings.</p>
       </div>
     </div>
   </section>
@@ -358,7 +370,7 @@ Jordan's twin *2
 # Taylor 100%   <- remove the # to make Taylor always win`;
 
 const ta=$('#names'), cv=$('#wheel'), ctx=cv.getContext('2d');
-let entries=[], rotation=0, spinning=false, palette=store.get('palette','Fairground'), audio=null;
+let entries=[], rotation=0, spinning=false, palette=store.get('palette','Classic'), audio=null;
 let history=store.get('history',[]);
 let mode=store.get('mode','normal')==='cheat'?'cheat':'normal';
 ta.value=store.get('names',SAMPLE);
@@ -368,7 +380,7 @@ $('#showOdds').checked=store.get('showOdds',false);
 $('#sound').checked=store.get('sound',true);
 $('#confettiOn').checked=store.get('confetti',true);
 $('#multi').value=store.get('multi',1);
-if(!PALETTES[palette]) palette='Fairground';
+if(!PALETTES[palette]) palette='Classic';
 
 const TAU=Math.PI*2, norm=a=>((a%TAU)+TAU)%TAU;
 const POINTER=-Math.PI/2; // the flapper sits at the top of the wheel
@@ -418,7 +430,7 @@ function draw(){
   ctx.clearRect(0,0,W,W);
   const pal=PALETTES[palette], S=segs().filter(g=>g.e2-g.s>1e-6);
   // black rim the pegs sit on
-  ctx.beginPath();ctx.arc(cx,cx,R+14,0,TAU);ctx.fillStyle='#17181c';ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cx,R+14,0,TAU);ctx.fillStyle=cs.getPropertyValue('--rim');ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.14)';ctx.lineWidth=2;ctx.stroke(); // keeps the rim visible on a dark page
   if(!S.length){
     ctx.beginPath();ctx.arc(cx,cx,R,0,TAU);ctx.fillStyle=cs.getPropertyValue('--panel');ctx.fill();
@@ -431,9 +443,9 @@ function draw(){
     if(S.length>1&&k===S.length-1&&col===pal[0]) col=pal[(k+1)%pal.length];
     ctx.beginPath();ctx.moveTo(cx,cx);ctx.arc(cx,cx,R,rotation+g.s,rotation+g.e2);ctx.closePath();
     ctx.fillStyle=col;ctx.fill();
-    ctx.strokeStyle='rgba(23,24,28,.35)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.strokeStyle='rgba(29,26,58,.3)';ctx.lineWidth=1.5;ctx.stroke();
     ctx.save();ctx.translate(cx,cx);ctx.rotate(rotation+(g.s+g.e2)/2);
-    ctx.fillStyle=lum(col)>.6?'#17181c':'#ffffff';
+    ctx.fillStyle=lum(col)>.6?'#1d1a3a':'#ffffff';
     const f=Math.min(fs,(g.e2-g.s)*R*.7*.75);
     ctx.font=`700 ${f}px ${cs.getPropertyValue('--f-body')}`;ctx.textAlign='right';ctx.textBaseline='middle';
     let t=g.name, maxW=R*.72;
@@ -444,12 +456,12 @@ function draw(){
   // white pegs at every slice boundary; the flapper clicks over these
   if(S.length>1&&S.length<=80){
     const pr=Math.max(2.5,Math.min(6,W/110));
-    S.forEach(g=>{const a=rotation+g.s;ctx.beginPath();ctx.arc(cx+Math.cos(a)*(R+7),cx+Math.sin(a)*(R+7),pr,0,TAU);ctx.fillStyle='#f4f1e8';ctx.fill()});
+    S.forEach(g=>{const a=rotation+g.s;ctx.beginPath();ctx.arc(cx+Math.cos(a)*(R+7),cx+Math.sin(a)*(R+7),pr,0,TAU);ctx.fillStyle=cs.getPropertyValue('--peg');ctx.fill()});
   }
   const hr=W*.11;
-  ctx.beginPath();ctx.arc(cx,cx,hr+5,0,TAU);ctx.fillStyle='#17181c';ctx.fill();
-  ctx.beginPath();ctx.arc(cx,cx,hr,0,TAU);ctx.fillStyle='#f5b700';ctx.fill();
-  ctx.fillStyle='#17181c';ctx.font=`400 ${hr*.42}px ${cs.getPropertyValue('--f-display')}`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.beginPath();ctx.arc(cx,cx,hr+5,0,TAU);ctx.fillStyle=cs.getPropertyValue('--rim');ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cx,hr,0,TAU);ctx.fillStyle=cs.getPropertyValue('--accent');ctx.fill();
+  ctx.fillStyle=cs.getPropertyValue('--accent-ink');ctx.font=`400 ${hr*.42}px ${cs.getPropertyValue('--f-display')}`;ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(spinning?'…':'SPIN',cx,cx+1);
 }
 function updateCounter(){
@@ -699,12 +711,21 @@ function renderSwatches(){
 // ---- modes
 function setMode(m){
   mode=m; store.set('mode',m);
-  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
   document.querySelectorAll('.cheat-only').forEach(el=>el.hidden=m!=='cheat');
   document.querySelectorAll('.normal-only').forEach(el=>el.hidden=m==='cheat');
   renderOdds(); draw();
 }
-document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+
+// ---- light / dark
+function setTheme(t){
+  if(t==='light'||t==='dark') document.documentElement.dataset.theme=t; else delete document.documentElement.dataset.theme;
+  store.set('theme',t);
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.theme===t));
+}
+document.querySelectorAll('#themeSeg button').forEach(b=>b.onclick=()=>setTheme(b.dataset.theme));
+setTheme(store.get('theme','auto'));
 $('#rigReset').onclick=()=>{
   ta.value=ta.value.split('\n').map(l=>l.trim().startsWith('#')?l:l.replace(PCT_RE,'').replace(/\s+$/,'')).join('\n');refresh();
 };
